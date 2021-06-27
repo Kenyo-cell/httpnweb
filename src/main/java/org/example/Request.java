@@ -17,6 +17,8 @@ public class Request {
     public Request(BufferedReader in) {
         try {
             requestLine = in.readLine().split(" ");
+            method = requestLine[0];
+            path = requestLine[1];
 
             StringBuilder headersBuilder = new StringBuilder();
             String str;
@@ -25,14 +27,13 @@ public class Request {
             }
             headers = headersBuilder.toString().split(CRLF);
 
+            if (!in.ready()) return;
+
             StringBuilder bodyBuilder = new StringBuilder();
             while ((str = in.readLine()) != null) {
                 bodyBuilder.append(str);
             }
             body = bodyBuilder.toString().split(CRLF);
-
-            method = requestLine[0];
-            path = requestLine[1];
         } catch (IOException e) {
             e.printStackTrace();
         }

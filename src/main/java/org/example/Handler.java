@@ -1,8 +1,8 @@
 package org.example;
 
-import java.io.BufferedOutputStream;
+import java.io.OutputStream;
 
 @FunctionalInterface
 public interface Handler {
-    public void handle(Request request, BufferedOutputStream out);
+    public void handle(Request request, OutputStream out);
 }

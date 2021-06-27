@@ -28,9 +28,8 @@ public class Server {
     public void start() {
         try (final var serverSocket = new ServerSocket(9999)) {
             while (true) {
-                try (final var socket = serverSocket.accept()) {
-                    pool.submit(new Thread(() -> handleConnection(socket)));
-                }
+                final var socket = serverSocket.accept();
+                pool.submit(new Thread(() -> handleConnection(socket)));
             }
         } catch (IOException e) {
             e.printStackTrace();

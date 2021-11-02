@@ -10,19 +10,11 @@ public enum ContentType {
     NULL(null);
 
     private final String enumName;
-    private String name;
     private final Map<String, String> additionalInfo = new HashMap<>();
+    private String name;
 
     ContentType(String name) {
         this.enumName = name;
-    }
-
-    public String getEnumName() {
-        return enumName;
-    }
-
-    public String getName() {
-        return name;
     }
 
     public static ContentType valueOfOrDefault(String name) {
@@ -38,12 +30,18 @@ public enum ContentType {
         return TEXT_PLAIN;
     }
 
+    public String getEnumName() {
+        return enumName;
+    }
+
+    public String getName() {
+        return name;
+    }
+
     private void processAdditionalInfo(ContentType contentType, String parameter) {
-        switch (contentType){
-            case MULTIPART_FORM_DATA -> {
-                String boundary = parameter.split(";")[1].trim().split("=")[1];
-                additionalInfo.put("boundary", boundary);
-            }
+        if (contentType == ContentType.MULTIPART_FORM_DATA) {
+            String boundary = parameter.split(";")[1].trim().split("=")[1];
+            additionalInfo.put("boundary", boundary);
         }
     }
 

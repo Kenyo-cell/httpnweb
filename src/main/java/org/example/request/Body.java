@@ -8,7 +8,6 @@ import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.example.pair.NameItemPair;
 
-import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
@@ -18,8 +17,9 @@ import java.util.stream.Collectors;
 public class Body {
     private final ContentType contentType;
     private final List<NameItemPair> bodyContent = new LinkedList<>();
+    private static final String CRLF = "\r\n";
 
-    public Body(List<String> lines) throws IOException, FileUploadException {
+    public Body(List<String> lines) throws FileUploadException {
         this(lines, ContentType.TEXT_PLAIN);
     }
 
@@ -29,13 +29,13 @@ public class Body {
             case MULTIPART_FORM_DATA -> processMultipartData(lines);
             case X_WWW_FORM_URLENCODED -> processUrlEncodedData(lines);
             case TEXT_PLAIN -> processTextPlainData(lines);
-            default -> System.out.println("Undefined Content-Type");
+            default -> collectByteData("data", String.join(CRLF, lines));
         }
     }
 
     private void processTextPlainData(List<String> lines) {
-        String data = String.join("\r\n", lines);
-        System.out.println(data);
+        String data = String.join(CRLF, lines);
+        collectByteData(contentType.getEnumName(), data);
     }
 
     private void processUrlEncodedData(List<String> lines) {
@@ -53,7 +53,7 @@ public class Body {
     }
 
     private void processMultipartData(List<String> lines) throws FileUploadException {
-        String l = String.join("\r\n", lines);
+        String l = String.join(CRLF, lines);
 
         FileUploadBase upload = new FileUpload();
         FileItemFactory factory = new DiskFileItemFactory();
@@ -61,18 +61,30 @@ public class Body {
 
         var items = upload.parseRequest(new SimpleRequestContext(contentType.getName(), l.getBytes()));
 
-        items.forEach(a -> {
-            System.out.println(new String(a.get()));
-            System.out.println(a.getContentType());
-            System.out.println(a.getFieldName());
-            System.out.println(a.getName());
-            System.out.println(a.getSize());
-            System.out.println(a.getString());
+        items.forEach(item -> {
+            bodyContent.add(
+                    new NameItemPair(
+                            item.getFieldName(),
+                            DataItem.newBuilder()
+                                    .setFilename(item.getName())
+                                    .setContentType(item.getContentType())
+                                    .setSize(item.getSize())
+                                    .setContent(item.get())
+                                    .build()
+                    )
+            );
         });
     }
 
-    private void collectByteData(List<String> lines) {
-
+    private void collectByteData(String key, String content) {
+        bodyContent.add(
+                new NameItemPair(
+                        key,
+                        DataItem.newBuilder()
+                                .setSize(content.length())
+                                .setContent(content.getBytes(StandardCharsets.UTF_8))
+                                .build()
+                ));
     }
 
     public boolean isEmpty() {

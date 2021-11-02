@@ -1,9 +1,7 @@
 package org.example;
 
 
-import org.example.request.ContentType;
-
-import java.io.*;
+import java.io.IOException;
 
 public class App {
     public static void main(String[] args) throws IOException {
@@ -20,6 +18,7 @@ public class App {
             ).getBytes());
             out.flush();
         });
+
         server.addHandler("POST", "/messages", (request, out) -> {
             System.out.printf("%s%n", request.getBody().getBodyParameters());
             out.write(("HTTP/1.1 200 OK\r\n" +

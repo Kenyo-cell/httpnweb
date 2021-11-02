@@ -21,6 +21,15 @@ public class App {
             out.flush();
         });
         server.addHandler("POST", "/messages", (request, out) -> {
+            System.out.printf("%s%n", request.getBody().getBodyParameters());
+            out.write(("HTTP/1.1 200 OK\r\n" +
+                       "Content-Length: 43\r\n" +
+                       "Connection: close\r\n" +
+                       "Content-Type: text/html\r\n" +
+                       "\r\n" +
+                       "<html><head></head><body>POST</body></html>\n"
+            ).getBytes());
+            out.flush();
         });
 
         server.listen(9999);

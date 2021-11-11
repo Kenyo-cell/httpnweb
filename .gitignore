@@ -1,4 +1,6 @@
+.gitignore
 *.DS_Store
+Main.java
 HELP.md
 build/
 

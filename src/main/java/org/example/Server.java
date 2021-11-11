@@ -1,14 +1,17 @@
 package org.example;
 
+import org.example.handler.Handler;
+import org.example.handler.HandlerKeyPair;
+import org.example.request.Request;
+
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.nio.CharBuffer;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -17,19 +20,20 @@ public class Server {
             List.of("/index.html", "/spring.svg", "/spring.png", "/resources.html", "/styles.css", "/app.js",
                     "/links.html", "/forms.html", "/classic.html", "/events.html", "/events.js");
     private final int poolSize = 64;
-    private ExecutorService pool;
-    private final Map<Pair<String, String>, Handler> handlers;
+    private final ExecutorService threadPool;
+    // First map String in pair key is Method name and second is path for this method
+    private final Map<HandlerKeyPair, Handler> methodsHandlers;
 
     public Server() {
-        pool = Executors.newFixedThreadPool(poolSize);
-        handlers = new HashMap<>();
+        threadPool = Executors.newFixedThreadPool(poolSize);
+        methodsHandlers = new HashMap<>();
     }
 
-    public void start() {
-        try (final var serverSocket = new ServerSocket(9999)) {
+    public void listen(int port) {
+        try (final var serverSocket = new ServerSocket(port)) {
             while (true) {
                 final var socket = serverSocket.accept();
-                pool.submit(new Thread(() -> handleConnection(socket)));
+                threadPool.submit(() -> handleConnection(socket));
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -42,33 +46,59 @@ public class Server {
 
             // read only request line for simplicity
             // must be in form GET /path HTTP/1.1
-            final var request = new Request(in);
-
-            if (request.getRequestLine().length != 3) {
+            final Request request;
+            try {
+                request = new Request(readAllStreamInfo(in));
+            } catch (IllegalArgumentException e) {
+                System.out.println(e.getMessage());
                 socket.close();
                 return;
             }
 
-
-            if (!validPaths.contains(request.getPath())) {
+            if (!validPaths.contains(request.getPath())
+                && !methodsHandlers.containsKey(new HandlerKeyPair(request.getMethod(), request.getPath()))) {
                 out.write((
                         "HTTP/1.1 404 Not Found\r\n" +
-                                "Content-Length: 0\r\n" +
-                                "Connection: close\r\n" +
-                                "\r\n"
+                        "Content-Length: 48\r\n" +
+                        "Connection: close\r\n" +
+                        "Content-Type: text/html\r\n" +
+                        "\r\n" +
+                        "<html><head></head><body>Not Found</body></html>\n"
                 ).getBytes());
                 out.flush();
                 return;
             }
 
-            handlers.get(new Pair<String, String>(request.getMethod(), request.getPath())).handle(new Request(in), out);
-
+            methodsHandlers.get(new HandlerKeyPair(request.getMethod(), request.getPath()))
+                    .handle(request, out);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
+    private List<String> readAllStreamInfo(BufferedReader in) throws IOException {
+        int bufferSize = 2 << 9;
+        CharBuffer buffer = CharBuffer.allocate(bufferSize);
+        int readed;
+        StringBuilder builder = new StringBuilder();
+
+        while ((readed = in.read(buffer)) > 0) {
+            buffer.flip();
+
+            char[] dst = new char[readed];
+            buffer.get(dst);
+
+            builder.append(dst);
+
+            if (readed != bufferSize) break;
+
+            buffer.clear();
+        }
+
+        return new LinkedList<>(Arrays.asList(builder.toString().split("\r\n")));
+    }
+
     public void addHandler(String method, String path, Handler handler) {
-        handlers.put(new Pair(method, path), handler);
+        methodsHandlers.put(new HandlerKeyPair(method, path), handler);
     }
 }

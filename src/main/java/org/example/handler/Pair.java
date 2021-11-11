@@ -1,4 +1,4 @@
-package org.example;
+package org.example.handler;
 
 public class Pair<F, S> {
     public F first;

@@ -2,52 +2,13 @@ package org.example.request;
 
 public class DataItem {
 
-    static class DataItemBuilder {
-        private String fileExtension = null;
-        private String filename = null;
-        private long size = -1;
-        private byte[] content = null;
-
-        public DataItemBuilder() {
-        }
-
-        public DataItemBuilder setFileExtension(String fileExtension) {
-            this.fileExtension = fileExtension;
-            return this;
-        }
-
-        public DataItemBuilder setFilename(String filename) {
-            this.filename = filename;
-            return this;
-        }
-
-        public DataItemBuilder setSize(long size) {
-            this.size = size;
-            return this;
-        }
-
-        public DataItemBuilder setContent(byte[] content) {
-            this.content = content;
-            return this;
-        }
-
-        public DataItem build() {
-            return new DataItem(
-                    fileExtension,
-                    filename,
-                    size,
-                    content
-            );
-        }
-    }
-
-    private String fileExtension;
-    private String filename;
-    private long size;
-    private byte[] content;
+    private final String contentType;
+    private final String filename;
+    private final long size;
+    private final byte[] content;
 
     private DataItem(String name, String filename, long size, byte[] content) {
-        this.fileExtension = name;
+        this.contentType = name;
         this.filename = filename;
         this.size = size;
         this.content = content;
@@ -57,8 +18,8 @@ public class DataItem {
         return new DataItemBuilder();
     }
 
-    public String getFileExtension() {
-        return fileExtension;
+    public String getContentType() {
+        return contentType;
     }
 
     public String getFilename() {
@@ -86,7 +47,46 @@ public class DataItem {
         return "DataItem{" +
                "filename='" + filename + '\'' +
                ", size=" + size +
-               ", stringifyContent=" + new String(content) +
+               ", stringifyContent=" + new String(content).substring(0, size > 100 ? 100 : content.length) +
                "}";
+    }
+
+    static class DataItemBuilder {
+        private String contentType = null;
+        private String filename = null;
+        private long size = -1;
+        private byte[] content = null;
+
+        public DataItemBuilder() {
+        }
+
+        public DataItemBuilder setContentType(String contentType) {
+            this.contentType = contentType;
+            return this;
+        }
+
+        public DataItemBuilder setFilename(String filename) {
+            this.filename = filename;
+            return this;
+        }
+
+        public DataItemBuilder setSize(long size) {
+            this.size = size;
+            return this;
+        }
+
+        public DataItemBuilder setContent(byte[] content) {
+            this.content = content;
+            return this;
+        }
+
+        public DataItem build() {
+            return new DataItem(
+                    contentType,
+                    filename,
+                    size,
+                    content
+            );
+        }
     }
 }

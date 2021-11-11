@@ -1,7 +1,7 @@
 package org.example;
 
-import org.example.handler.Handler;
-import org.example.handler.HandlerKeyPair;
+import org.apache.commons.fileupload.FileUploadException;
+import org.example.pair.HandlerKeyPair;
 import org.example.request.Request;
 
 import java.io.BufferedOutputStream;
@@ -47,9 +47,10 @@ public class Server {
             // read only request line for simplicity
             // must be in form GET /path HTTP/1.1
             final Request request;
+
             try {
                 request = new Request(readAllStreamInfo(in));
-            } catch (IllegalArgumentException e) {
+            } catch (IllegalArgumentException | FileUploadException e) {
                 System.out.println(e.getMessage());
                 socket.close();
                 return;

@@ -1,4 +1,4 @@
-package org.example.handler;
+package org.example;
 
 import org.example.request.Request;
 

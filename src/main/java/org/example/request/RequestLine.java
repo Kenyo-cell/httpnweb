@@ -14,15 +14,15 @@ public class RequestLine {
     private List<NameValuePair> queryParameters;
 
     public RequestLine(String line) {
-        final var splitRequestLIne = line.split(" ");
+        final var splitRequestLine = line.split(" ");
 
-        if (splitRequestLIne.length > 3)
+        if (splitRequestLine.length != 3)
             throw new IllegalArgumentException("Invalid request line found %s".formatted(line));
 
-        method = splitRequestLIne[0];
-        protocol = splitRequestLIne[2];
+        method = splitRequestLine[0];
+        protocol = splitRequestLine[2];
 
-        final String[] pathSplit = splitRequestLIne[1].split("\\?");
+        final String[] pathSplit = splitRequestLine[1].split("\\?");
 
         path = pathSplit[0];
         if (pathSplit.length > 1)
